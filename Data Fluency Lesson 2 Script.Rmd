@@ -1,0 +1,208 @@
+---
+title: "PGD Data Training #2: Common Statistical Concepts and How to Interpret Them"
+author: "Sarv Salvi"
+date: "July 5th, 2018"
+output: 
+  html_document:
+    toc: true
+    toc_float: 
+      collapsed: true
+      smooth_scroll: true
+    toc_depth: 4
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+rm(list=ls())
+
+library(dplyr)
+library(ggplot2)
+#library(openxlsx)
+library(knitr)
+#library(boot)
+#library(stargazer)
+#library(caTools)
+#library(kableExtra)
+library(tidyr)
+#library(Hmisc)
+#library(lettercase)
+
+setwd("C:/Users/bsalv/Documents/Work/One Acre Fund/PGD/PGD Training")
+
+
+RosterLite <- read.csv("Season Clients Light 2018, Long Rain 20180705-101741/Season Clients Light_20180705-101741.csv")
+
+### Cleaning Data:
+
+#Finding and Dropping all rows with no Credit
+RosterLite <- RosterLite[RosterLite$TotalCredit >=2000,]
+
+```
+
+### Introduction
+
+Today we will be covering some basic summary statistics for variables contain numeric data such as the amount of credit a farmer takes or the number of farmers in a group.  We will not be talking about categorical data such as a clients district or site.  All of the concepts in this lesson were created by statisticians to convey different bits of important information about a numeric variable as concisely as possible.  This lesosn will focus on the concept and its interpretation not how to visualize data or calculate any particular statistic.  
+
+### Distributions
+
+Definition:  The distribution of a numeric variable is all the values that the variable takes in a data set and the number of occurrences of each value.  
+
+.	Example: The variable of percent repaid for each client has a distribution.  It takes on range of values and the number of occurrences is the number of clients who have repaid a particular percentage.  Below is a visual representation of the distribution of amount repaid in the Kenya program in LR 2018.
+
+```{r , echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+
+RosterLite$PercRepaid <- RosterLite$TotalRepaid/RosterLite$TotalCredit*100 
+
+ggplot(RosterLite, aes(PercRepaid)) + geom_histogram(binwidth = 10) + labs(y="Number of Occurences", x = "Percent Repaid") + ggtitle("Histogram of Percent Repaid")
+
+
+```
+
+
+Summarizing the Distribution:  When we are talking about a variable with others on our team, we often need to describe a distribution in a way that is useful for making decisions.  Simply listing all values is not actionable information. The two most important things you can tell someone about a distribution are:
+
+1.	Central/typical value: A single number that best represents the entire distribution by accounting for number of occurrences of each value. Mean, median, and mode are th most common statistical concepts that have been created to describe the "central/typical value".
+  + Mean: This is calculated by summing all of the values in the distributions and dividing the by the total number of values in the entire distribution. This is also called average.
+  + Median: This is calculated by finding the observation that has half the observations less than it and half greater than it.
+  + Mode: This is calculated by finding the observations that occurs most frequently in the distribution.  Sometimes the top two modes are reported.
+
+2.	Spread: This describes the arrangement of values in relation to the "central/typical value". Range and Inter-quartile range are common statistical concepts that have been created to describe "spread".
+  + Range: The range is the largest and smallest values in the distribution.
+  + Inter-quartile Range (IQR):  This is the range of observations that captures the middle 50% of observations.  It is reported by giving the observation that is greater than 25% of all observations as the lower bound and the observation that is greater than 75% of all observations as the upper bound.
+
+
+Discussion Questions:  Split into small groups or pairs and discuss each of the questions below.
+
+1.	Choosing between Mean and Median:  Below are some histograms which are a pretty common visual representation of a distribution. In a histogram we have "bins" that are used to represent the number of occurences of the variable between the upper and lower bound of the bin.  For each case discuss whether mean or median is the most appropriate description of the central/typical value and why. In each case the mean is the green line, the median is the red line.
+
+```{r , echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+# Calculating the mean, mediand and mode for the ablines
+TCMean <- mean(RosterLite$TotalCredit)
+TCMedian <- median(RosterLite$TotalCredit)
+
+# Creating ModeFunction in R
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+TCMode <- getmode(RosterLite$TotalCredit)
+
+## Plot 1 of Transaction Size: Median would be the right answer here due to the skew to teh right. 
+
+# Calculating the mean, mediand and mode for the ablines
+TCMean <- mean(RosterLite$TotalCredit)
+TCMedian <- median(RosterLite$TotalCredit)
+
+# Creating ModeFunction in R
+getmode <- function(v) {
+  uniqv <- round(v)
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+TCMode <- getmode(RosterLite$TotalCredit)
+
+RosterLiteNoStaff <- RosterLite[RosterLite$RegionName != "KENYA STAFF REGION",] 
+
+ggplot(RosterLiteNoStaff, aes(TotalCredit)) + geom_histogram(binwidth = 1000) + geom_vline(xintercept = mean(TCMean), color = "green") + geom_vline(xintercept = median(TCMedian), color = "red") + labs(y="Number of Occurences", x = "Client Transaction Size") + ggtitle("Histogram of Client Transaction Size")
+
+#+ geom_vline(xintercept = getmode(TCMode), color = "black") 
+
+
+
+## PLOT 2: normal distribution wehre we could use a mean or a median or mode infact
+# Generating the normal distribution
+set.seed(1000)
+Normal <- data.frame(rnorm(1000, 1000, 100))
+colnames(Normal)[1] <- "Normal"
+  
+# Calculating the mean median and mode for it.
+NMean <- mean(Normal$Normal)
+NMedian <- median(Normal$Normal)
+NMode <- getmode(Normal$Normal)
+
+ggplot(Normal, aes(Normal)) + geom_histogram(binwidth = 50) + geom_vline(xintercept = mean(NMean), color = "green") + geom_vline(xintercept = median(NMedian), color = "red") + labs(y="Number of Occurences", x = "Normally Distributed Variable") + ggtitle("Histogram of a Normal Distribution")
+#+ geom_vline(xintercept = getmode(NMode), color = "black") 
+
+
+
+```
+
+```{r , echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+
+#BiMod <- RosterLite[RosterLite$RegionName != "KENYA STAFF REGION", ]
+
+#ggplot(RosterLite, aes(x = RegionName, y = TotalCredit)) +  geom_boxplot()
+
+
+```
+
+2. Follow-up on Mode: Look at the distributions above again and locate the approximate location of the mode  Discuss in small groups what information, if any, this gives us that is not contained in the median or mean.  
+
+3.	Range and IQR:  A box plot is a very common way of visually showing the range and the IQR. Please note that in a box plot extreme values are shown by the dots.  A value typically considered "extreme" if it is greater or less than 1.5 times the width of the IQR above or below or the observations at the 25th and 75th percentiles.  Discuss how range and IQR provide different but useful pieces of information about the spread of the following distributions. 
+
+```{r , echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+
+#RosterLite <- RosterLite[RosterLite$RegionName != "KENYA STAFF REGION", ]
+
+ggplot(RosterLite, aes(x = RegionName, y = TotalCredit)) +  geom_boxplot() + labs(y="Client Transaction Size", x = "Region Name") + ggtitle("Client Transaction Size in Different Roster Regions")
+
+
+```
+
+
+### Correlations:
+
+Definition:  In the previous section, we looked at how to describe a single variable. Often we are interested in the relationship between two numeric variables.  Correlation is a measure of how two numeric variables move together.  The most common type of the correlation is the Pearson correlation coefficient.  It will always take a value between -1 and 1.  A value of -1 means that as one variable increases the other decreases proportionally - they have an stonrg inverse correlation.  A value of 1 means that as one variable increases the other variable also increases proportionally - they have a strong direct correlation. A correlation coefficient of 0 means that the two variables do not move together at all. Values between -1 and 0 and 1 and 0 indicate a correlation of intermediate strength.
+
+Discussion Questions: Split into small groups or pairs and discuss each of the questions below. 
+
+1.	Visualizing Correlation: A common way of visualizing a correlation is by plotting the two variables in a scatter plot.  Inspect the two scatter plots below and decide the following:
+  + Does the correlation appear strong or weak?
+  + Does the correlation appear to be direct or inverse?
+  + Come up with a guess for what the Pearson correlation coefficient might be.  Person with the lowest mean deviation from the actual values gets a prize from me.
+
+```{r , echo=FALSE, warning=FALSE, message=FALSE, results='asis'}
+
+# Dropping Kenya staff region it be fucking up the graphs.
+RosterLiteNoStaff <- RosterLite[RosterLite$RegionName != "KENYA STAFF REGION",] 
+
+# I need to remove some of the observations.
+GroupLevel <- RosterLiteNoStaff %>%
+  group_by(DistrictName, SiteName, GroupName) %>%
+  summarise(
+    GroupSize = n(),
+    GroupCredit = sum(TotalCredit),
+    TotalRepaid = sum(TotalRepaid),
+    PercRepaid = sum(TotalRepaid)/sum(TotalCredit)
+  )
+
+# Plot 1: Group size of Group Credit - Strong Direct Correlation 
+ggplot(GroupLevel, aes(x = GroupSize, y = GroupCredit)) +  geom_point() + labs(y="Total Group Credit", x = "Number of Clients in Group") + ggtitle("Total Group Credit vs. Number of Clients in Group")
+
+
+SiteLevel <- RosterLiteNoStaff %>%
+  ungroup() %>%
+  group_by(DistrictName, SiteName) %>%
+  summarise(
+    SiteSize = n(),
+    AvgTransactionSize = sum(TotalCredit)/SiteSize
+  )
+
+# Plot 2: Clients per FO and average Transactionsize- Weak Correlation
+ggplot(SiteLevel, aes(x = SiteSize, y = AvgTransactionSize)) +  geom_point() + labs(y="Average Transaction Size per Client", x = "Number of Clients in Site") + ggtitle("Average Client Transaction Size vs. Number of Clients in Site")
+
+
+
+# Plot 3: - Negative Correlation.
+#ggplot(GroupLevel, aes(x = PercRepaid, y = GroupCredit)) +  geom_point()
+
+
+
+```
+
+
+
+
